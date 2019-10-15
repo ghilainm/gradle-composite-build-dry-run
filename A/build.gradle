@@ -1,0 +1,52 @@
+
+plugins {
+    id 'maven-publish'
+}
+
+group = "my.group"
+version = "1.0.0-SNAPSHOT"
+
+configurations {
+    bra
+}
+configurations.register("default")
+
+def artifactFile = file("$buildDir/my-super-jar.jar")
+task fatJar(type: Jar) {
+    from {
+        file("test.txt")
+    }
+    archiveFileName = "my-super-jar.jar"
+    destinationDirectory = project.buildDir
+    doFirst {
+        println "Started execution to construct the FAT jar"
+        Thread.sleep(5000)
+    }
+    doLast {
+        println "Finished to construct the FAT jar"
+    }
+}
+
+def myCustomArtifact = artifacts.add('bra', artifactFile) {
+    type 'jar'
+    builtBy 'fatJar'
+}
+
+publishing {
+    publications {
+        myCustomPublication(MavenPublication) {
+            artifact myCustomArtifact
+        }
+    }
+}
+
+tasks.register("build"){
+    dependsOn("fatJar")
+}
+
+tasks.register("clean") {
+    doLast {
+        println "deleting "+buildDir.getAbsolutePath()
+        buildDir.deleteDir()
+    }
+}

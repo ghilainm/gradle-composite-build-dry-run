@@ -1,0 +1,34 @@
+
+
+group = "my.group"
+version = "1.0.0-SNAPSHOT"
+
+configurations {
+    whatever
+}
+
+dependencies {
+    whatever "my.group:A:1.0.0-SNAPSHOT"
+}
+
+tasks.register("unzip-bra") {
+    doFirst {
+        println "I started my execution..."
+    }
+    doLast {
+        configurations.whatever.resolve().each {
+            println it
+            if(!it.exists()) {
+                throw new RuntimeException("The file "+it.getAbsolutePath()+" must exists")
+            }
+        }
+    }
+}
+
+tasks.register("build"){
+    dependsOn("unzip-bra")
+}
+
+tasks.register("clean") {
+    buildDir.delete()
+}

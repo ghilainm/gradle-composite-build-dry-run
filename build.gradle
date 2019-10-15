@@ -1,0 +1,10 @@
+["dependencies", "compileJava", "compileTestJava", "wrapper", "assemble", "build", "classes", "clean", "docker", "test", "check", "integrationTest", "publish"].each { name ->
+
+    Task task = project.tasks.findByName(name) == null ? project.tasks.create(name) : project.tasks.findByName(name)
+    task.with {
+        for (build in gradle.includedBuilds) {
+            dependsOn gradle.includedBuild(build.name).task(':' + name)
+        }
+    }
+
+}
