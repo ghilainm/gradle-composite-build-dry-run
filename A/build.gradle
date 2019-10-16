@@ -10,17 +10,26 @@ configurations {
     bra
 }
 configurations.register("default")
+configurations.default.extendsFrom(configurations.bra)
 
 def artifactFile = file("$buildDir/my-super-jar.jar")
+
+task generateRandomTestFile {
+    doLast {
+        project.rootDir.toPath().resolve("test.txt").text = UUID.randomUUID().toString()
+    }
+}
+
 task fatJar(type: Jar) {
     from {
         file("test.txt")
     }
+    dependsOn("generateRandomTestFile")
     archiveFileName = "my-super-jar.jar"
     destinationDirectory = project.buildDir
     doFirst {
         println "Started execution to construct the FAT jar"
-        Thread.sleep(5000)
+        Thread.sleep(2000)
     }
     doLast {
         println "Finished to construct the FAT jar"

@@ -1,4 +1,5 @@
-
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
 
 group = "my.group"
 version = "1.0.0-SNAPSHOT"
@@ -11,24 +12,61 @@ dependencies {
     whatever "my.group:A:1.0.0-SNAPSHOT"
 }
 
-tasks.register("unzip-bra") {
-    doFirst {
-        println "I started my execution..."
-    }
+// Not working... file not found
+task unzipWhateverDependencies(type: Copy) {
+    dependsOn configurations.whatever
+    from configurations.whatever.fileCollection()
+    into project.buildDir
     doLast {
-        configurations.whatever.resolve().each {
-            println it
-            if(!it.exists()) {
-                throw new RuntimeException("The file "+it.getAbsolutePath()+" must exists")
-            }
+        println "I have finished my execution"
+        configurations.whatever.fileCollection().each {
+            println "Found that while unzipping : "+it
+        }
+    }
+}
+
+// Manual copy -> working
+tasks.register("manualCopy") {
+    dependsOn configurations.whatever
+    inputs.files(configurations.whatever)
+    outputs.dir(project.buildDir.toPath().resolve("jars"))
+    doLast {
+        println "Starting manual copy"
+        configurations.whatever.files.each {
+            Files.copy(it.toPath(), project.buildDir.toPath().resolve("jars").resolve(it.name), StandardCopyOption.REPLACE_EXISTING)
+        }
+    }
+}
+
+// Other way of COpy
+tasks.register("copyUsingCopyTask", Copy) {
+    dependsOn configurations.whatever
+    from configurations.whatever
+    into project.buildDir
+    doLast {
+        println "I have finished my execution"
+        configurations.whatever.fileCollection().each {
+            println "Found that while unzipping : "+it
         }
     }
 }
 
 tasks.register("build"){
-    dependsOn("unzip-bra")
+    dependsOn("copyUsingCopyTask")
 }
 
 tasks.register("clean") {
-    buildDir.delete()
+    doLast {
+        println "deleting "+buildDir.getAbsolutePath()
+        buildDir.delete()
+    }
+}
+
+tasks.register("printDependencies") {
+    doLast {
+        configurations.whatever.files.each {
+            println "Found one dependency in whatever!"
+            println it
+        }
+    }
 }
